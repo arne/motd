@@ -154,6 +154,8 @@ uptime_kuma:
 - Exit nonzero = treat as failure; keep last good cache, don't overwrite
 - `command_full` is what `motd <name>` runs — use it to dump the verbose view
 
+**Reserved names.** `version`, `update`, `refresh`, and `example-config` are subcommands; modules with those names won't be reachable via `motd <name>`.
+
 ## Marks
 
 37 cute animals live in `examples/marks/animals/`. Pick one per host to differentiate where you logged in:

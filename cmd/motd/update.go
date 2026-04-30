@@ -13,6 +13,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -47,7 +48,7 @@ func runUpdate(args []string) error {
 		return fmt.Errorf("fetch latest release: %w", err)
 	}
 
-	current := currentVersionTag()
+	current := versionTag(version)
 
 	if *check {
 		fmt.Printf("current: %s\nlatest:  %s\n", current, rel.TagName)
@@ -117,14 +118,17 @@ func runUpdate(args []string) error {
 	return nil
 }
 
-func currentVersionTag() string {
-	if version == "" || version == "dev" {
+// versionTag normalizes the ldflags-injected version string into a
+// GitHub-release-style tag (e.g. "0.1.2" -> "v0.1.2"). Empty or "dev"
+// builds round-trip as "dev".
+func versionTag(v string) string {
+	if v == "" || v == "dev" {
 		return "dev"
 	}
-	if strings.HasPrefix(version, "v") {
-		return version
+	if strings.HasPrefix(v, "v") {
+		return v
 	}
-	return "v" + version
+	return "v" + v
 }
 
 func fetchLatestRelease() (*release, error) {
@@ -233,7 +237,7 @@ func installBinary(exe string, tarball []byte) error {
 		if err != nil {
 			return err
 		}
-		if h.Typeflag != tar.TypeReg || filepath.Base(h.Name) != "motd" {
+		if h.Typeflag != tar.TypeReg || path.Clean(h.Name) != "motd" {
 			continue
 		}
 		dir := filepath.Dir(exe)

@@ -35,6 +35,23 @@ func TestAssetName(t *testing.T) {
 	}
 }
 
+func TestVersionTag(t *testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"", "dev"},
+		{"dev", "dev"},
+		{"0.1.2", "v0.1.2"},
+		{"v0.1.2", "v0.1.2"},
+		{"1.0.0-rc1", "v1.0.0-rc1"},
+	}
+	for _, c := range cases {
+		if got := versionTag(c.in); got != c.want {
+			t.Errorf("versionTag(%q) = %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 func TestVerifyChecksum(t *testing.T) {
 	// SHA256 of "hello\n" is the well-known constant below.
 	checksums := strings.Join([]string{
