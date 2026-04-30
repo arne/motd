@@ -57,6 +57,14 @@ func main() {
 		return
 	}
 
+	if len(args) > 0 && args[0] == "refresh" {
+		if err := refreshCache(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+
 	configPath := *configFlag
 	explicit := configPath != ""
 	if !explicit {
@@ -191,6 +199,24 @@ func drillDown(configPath string, explicit bool, name string) error {
 	}
 
 	return fmt.Errorf("module %q has no drill-down", name)
+}
+
+func refreshCache() error {
+	dir := cache.DefaultDir()
+	c, err := cache.New(dir)
+	if err != nil {
+		return fmt.Errorf("cache: %w", err)
+	}
+	n, err := c.Clear()
+	if err != nil {
+		return fmt.Errorf("clear cache: %w", err)
+	}
+	noun := "entries"
+	if n == 1 {
+		noun = "entry"
+	}
+	fmt.Printf("cleared %d cached %s from %s\n", n, noun, dir)
+	return nil
 }
 
 func runShellInherit(cmd string) error {

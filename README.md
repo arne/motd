@@ -222,6 +222,22 @@ If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an e
 
 Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
 
+## `motd refresh`
+
+Wipes the per-module cache. Run it after an action that invalidates a cached module — most commonly `apt upgrade`, where the `updates` count would otherwise stay stale until its TTL expires.
+
+```bash
+sudo apt upgrade && motd refresh
+```
+
+For a single-user box, you can wire it into apt with a dpkg hook. The cache is per-user (`~/.cache/motd`), so this only refreshes the cache for the user who invoked `sudo apt`; other users keep their own caches and will see stale counts until their TTL expires or they run `motd refresh` themselves. The hook also no-ops under `unattended-upgrades` and other non-`sudo` apt invocations, since `$SUDO_USER` is unset there. Use the absolute path to your `motd` install — root's `PATH` typically doesn't include `~/go/bin`.
+
+```bash
+sudo tee /etc/apt/apt.conf.d/99-motd-refresh <<'EOF'
+DPkg::Post-Invoke { "[ -n \"$SUDO_USER\" ] && sudo -u \"$SUDO_USER\" /usr/local/bin/motd refresh >/dev/null 2>&1 || true"; };
+EOF
+```
+
 ## `motd example-config`
 
 Prints a sample config to stdout. Pipe it into a file and edit from there:
