@@ -55,9 +55,9 @@ motd example-config > ~/.config/motd/config.yaml
 
 # or system-wide for every user on the box
 sudo mkdir -p /etc/xdg/motd
+motd example-config | sudo tee /etc/xdg/motd/config.yaml >/dev/null
 git clone https://github.com/arne/motd /tmp/motd-src
 sudo cp -r /tmp/motd-src/examples/marks /etc/xdg/motd/
-sudo cp /tmp/motd-src/examples/system-config.yaml /etc/xdg/motd/config.yaml
 ```
 
 ### Hook it into your shell

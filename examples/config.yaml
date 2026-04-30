@@ -1,3 +1,7 @@
+# Sample motd config. Copy to ~/.config/motd/config.yaml and edit.
+#
+# `mark` — the friendly animal on the left. Pick any file from the marks dir,
+# or remove the line entirely to drop the mark.
 mark: { file: marks/animals/octopus.ansi }
 
 layout:
@@ -5,40 +9,38 @@ layout:
     - hstack:
         - mark
         - vstack: [host, up, load, disk, mem, ip]
-    - vstack: [services, reviews, updates, scrub]
+    - vstack: [services, updates]
 
 modules:
-  host:    { builtin: hostname }
-  up:      { builtin: uptime }
-  load:    { builtin: load }
-  mem:     { builtin: mem }
-  ip:      { builtin: ip }
-  disk:    { builtin: disk }
+  host: { builtin: hostname }
+  up:   { builtin: uptime }
+  load: { builtin: load }
+  mem:  { builtin: mem }
+  ip:   { builtin: ip }
+  disk: { builtin: disk }
 
+  # Reachability checks. Anything in `list` becomes one health check; only
+  # the ones that fail show up in the rendered motd.
   services:
     builtin: services
     list:
-      - { name: immich,    http: "http://localhost:2283/api/server/ping" }
-      - { name: openwebui, cmd: "incus exec openwebui -- curl -sf http://localhost:8080/health" }
+      - { name: internet, http: "https://www.google.com/generate_204" }
 
-  reviews:
-    command: 'echo ""'
-    command_full: "gh pr list -S 'review-requested:@me'"
-
+  # Pending package updates. Empty stdout = silent; any output renders as a
+  # warning. Adjust for your package manager (this snippet handles apt/dnf/
+  # pacman/brew; pick the one for your OS or write your own).
   updates:
     command: |
-      n=$(apt list --upgradable 2>/dev/null | tail -n +2 | wc -l)
-      [ "$n" -gt 0 ] && echo "$n packages outdated"
-    command_full: "apt list --upgradable"
-
-  scrub:
-    command: |
-      last=$(zpool status storage 2>/dev/null | grep -oP 'on \K.*$' | head -1)
-      if [ -n "$last" ]; then
-        days=$(( ( $(date +%s) - $(date -d "$last" +%s) ) / 86400 ))
-        if [ "$days" -gt 30 ]; then
-          echo "storage scrub last ran ${days}d ago"
-        fi
+      if command -v apt >/dev/null 2>&1; then
+        n=$(apt list --upgradable 2>/dev/null | tail -n +2 | wc -l)
+      elif command -v dnf >/dev/null 2>&1; then
+        n=$(dnf -q check-update 2>/dev/null | grep -c '^[a-zA-Z0-9]')
+      elif command -v checkupdates >/dev/null 2>&1; then
+        n=$(checkupdates 2>/dev/null | wc -l)
+      elif command -v brew >/dev/null 2>&1; then
+        n=$(brew outdated 2>/dev/null | wc -l)
+      else
+        n=0
       fi
-    command_full: "zpool status -v"
-    cache: 6h
+      [ "$n" -gt 0 ] && echo "$n packages outdated"
+    cache: 1h

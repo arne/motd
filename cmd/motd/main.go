@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	motd "github.com/arne/motd"
+	"github.com/arne/motd"
 	"github.com/arne/motd/internal/block"
 	"github.com/arne/motd/internal/builtin"
 	"github.com/arne/motd/internal/cache"
@@ -124,6 +124,9 @@ func renderMOTD(configPath string, explicit bool, out io.Writer) error {
 }
 
 func watchMOTD(configPath string, explicit bool) error {
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("no config to watch at %s — create one with: motd example-config > %s", configPath, configPath)
+	}
 	dirs := []string{filepath.Dir(configPath)}
 	if cfg, err := config.Load(configPath); err == nil && cfg.Mark != nil && cfg.Mark.File != "" {
 		if d := filepath.Dir(cfg.Mark.File); d != dirs[0] {

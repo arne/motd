@@ -3,10 +3,9 @@ package config
 import (
 	"io/fs"
 	"math/rand/v2"
-	"sort"
 	"strings"
 
-	motd "github.com/arne/motd"
+	"github.com/arne/motd"
 	"github.com/arne/motd/internal/layout"
 )
 
@@ -14,8 +13,7 @@ import (
 // It bundles a small set of safe builtins and a randomly-chosen animal mark
 // inlined as text, so it works even with no marks on disk.
 func Default() *Config {
-	return &Config{
-		Mark: &MarkSpec{Text: randomAnimalMark()},
+	cfg := &Config{
 		Layout: layout.Node{
 			Stack: &layout.Stack{
 				Direction: "h",
@@ -44,12 +42,16 @@ func Default() *Config {
 			"disk": {Builtin: "disk"},
 		},
 	}
+	if mark, ok := randomAnimalMark(); ok {
+		cfg.Mark = &MarkSpec{Text: mark}
+	}
+	return cfg
 }
 
-func randomAnimalMark() string {
+func randomAnimalMark() (string, bool) {
 	entries, err := fs.ReadDir(motd.Marks, "examples/marks/animals")
-	if err != nil || len(entries) == 0 {
-		return ""
+	if err != nil {
+		return "", false
 	}
 	names := make([]string, 0, len(entries))
 	for _, e := range entries {
@@ -58,13 +60,12 @@ func randomAnimalMark() string {
 		}
 	}
 	if len(names) == 0 {
-		return ""
+		return "", false
 	}
-	sort.Strings(names)
 	pick := names[rand.IntN(len(names))]
 	data, err := motd.Marks.ReadFile("examples/marks/animals/" + pick)
 	if err != nil {
-		return ""
+		return "", false
 	}
-	return strings.TrimRight(string(data), "\n")
+	return strings.TrimRight(string(data), "\n"), true
 }

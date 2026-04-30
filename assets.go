@@ -7,5 +7,5 @@ import "embed"
 //go:embed examples/marks/animals/*.ansi
 var Marks embed.FS
 
-//go:embed examples/example-config.yaml
+//go:embed examples/config.yaml
 var ExampleConfig string
