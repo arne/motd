@@ -222,6 +222,21 @@ If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an e
 
 Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
 
+## `motd refresh`
+
+Wipes the per-module cache. Run it after an action that invalidates a cached module — most commonly `apt upgrade`, where the `updates` count would otherwise stay stale until its TTL expires.
+
+```bash
+sudo apt upgrade && motd refresh
+```
+
+To do it automatically, drop a dpkg hook:
+
+```bash
+echo 'DPkg::Post-Invoke { "sudo -u $SUDO_USER motd refresh >/dev/null 2>&1 || true"; };' \
+  | sudo tee /etc/apt/apt.conf.d/99motd-refresh
+```
+
 ## `motd example-config`
 
 Prints a sample config to stdout. Pipe it into a file and edit from there:
