@@ -154,6 +154,8 @@ uptime_kuma:
 - Exit nonzero = treat as failure; keep last good cache, don't overwrite
 - `command_full` is what `motd <name>` runs — use it to dump the verbose view
 
+**Reserved names.** `version`, `update`, `refresh`, and `example-config` are subcommands; modules with those names won't be reachable via `motd <name>`.
+
 ## Marks
 
 37 cute animals live in `examples/marks/animals/`. Pick one per host to differentiate where you logged in:
@@ -221,6 +223,22 @@ In order:
 If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an error — the built-in default only kicks in when no path was specified.
 
 Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
+
+## `motd update`
+
+Replaces the running binary with the latest release from GitHub. Verifies the SHA256 against the release's `checksums.txt` before swapping the file in place.
+
+```bash
+motd update           # download and install if newer
+motd update --check   # report current vs. latest, install nothing
+motd update --force   # reinstall even when already on the latest
+```
+
+If the binary lives somewhere only root can write (e.g. `/usr/local/bin`), re-run with `sudo`. For Go-installed builds (`go install`), `~/go/bin` is user-writable so no sudo needed.
+
+## `motd version`
+
+Prints the version, commit, and build date. Equivalent to `motd --version`.
 
 ## `motd refresh`
 

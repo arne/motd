@@ -40,14 +40,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Printf("motd %s", version)
-		if commit != "" {
-			fmt.Printf(" (%s)", commit)
-		}
-		if date != "" {
-			fmt.Printf(" built %s", date)
-		}
-		fmt.Println()
+		printVersion(os.Stdout)
 		return
 	}
 
@@ -57,8 +50,21 @@ func main() {
 		return
 	}
 
+	if len(args) > 0 && args[0] == "version" {
+		printVersion(os.Stdout)
+		return
+	}
+
 	if len(args) > 0 && args[0] == "refresh" {
 		if err := refreshCache(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+
+	if len(args) > 0 && args[0] == "update" {
+		if err := runUpdate(args[1:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -199,6 +205,17 @@ func drillDown(configPath string, explicit bool, name string) error {
 	}
 
 	return fmt.Errorf("module %q has no drill-down", name)
+}
+
+func printVersion(out io.Writer) {
+	fmt.Fprintf(out, "motd %s", version)
+	if commit != "" {
+		fmt.Fprintf(out, " (%s)", commit)
+	}
+	if date != "" {
+		fmt.Fprintf(out, " built %s", date)
+	}
+	fmt.Fprintln(out)
 }
 
 func refreshCache() error {
