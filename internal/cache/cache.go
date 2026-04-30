@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,7 +36,8 @@ func (c *Cache) path(name string) string {
 	return filepath.Join(c.dir, name+".json")
 }
 
-// Clear removes every cached entry. Returns the number of entries removed.
+// Clear removes every cached entry, including any leftover .json.tmp files
+// from interrupted writes. Returns the number of entries removed.
 func (c *Cache) Clear() (int, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -48,10 +50,14 @@ func (c *Cache) Clear() (int, error) {
 	}
 	n := 0
 	for _, e := range entries {
-		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+		if e.IsDir() {
 			continue
 		}
-		if err := os.Remove(filepath.Join(c.dir, e.Name())); err != nil {
+		name := e.Name()
+		if !strings.HasSuffix(name, ".json") && !strings.HasSuffix(name, ".json.tmp") {
+			continue
+		}
+		if err := os.Remove(filepath.Join(c.dir, name)); err != nil {
 			return n, err
 		}
 		n++

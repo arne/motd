@@ -230,11 +230,12 @@ Wipes the per-module cache. Run it after an action that invalidates a cached mod
 sudo apt upgrade && motd refresh
 ```
 
-To do it automatically, drop a dpkg hook:
+For a single-user box, you can wire it into apt with a dpkg hook. The cache is per-user (`~/.cache/motd`), so this only refreshes the cache for the user who invoked `sudo apt`; other users keep their own caches and will see stale counts until their TTL expires or they run `motd refresh` themselves. The hook also no-ops under `unattended-upgrades` and other non-`sudo` apt invocations, since `$SUDO_USER` is unset there. Use the absolute path to your `motd` install — root's `PATH` typically doesn't include `~/go/bin`.
 
 ```bash
-echo 'DPkg::Post-Invoke { "sudo -u $SUDO_USER motd refresh >/dev/null 2>&1 || true"; };' \
-  | sudo tee /etc/apt/apt.conf.d/99motd-refresh
+sudo tee /etc/apt/apt.conf.d/99-motd-refresh <<'EOF'
+DPkg::Post-Invoke { "[ -n \"$SUDO_USER\" ] && sudo -u \"$SUDO_USER\" /usr/local/bin/motd refresh >/dev/null 2>&1 || true"; };
+EOF
 ```
 
 ## `motd example-config`
