@@ -1,0 +1,42 @@
+mark: { file: marks/animals/octopus.ansi }
+
+layout:
+  vstack:
+    - hstack:
+        - mark
+        - vstack: [host, up, load, disk, mem, ip]
+    - vstack: [services, updates, scrub]
+
+modules:
+  host:    { builtin: hostname }
+  up:      { builtin: uptime }
+  load:    { builtin: load }
+  mem:     { builtin: mem }
+  ip:      { builtin: ip }
+  disk:    { builtin: disk }
+
+  services:
+    builtin: services
+    list:
+      - { name: immich,    http: "http://localhost:2283/api/server/ping" }
+      - { name: openwebui, cmd: "incus exec openwebui -- curl -sf http://localhost:8080/health" }
+
+  updates:
+    command: |
+      n=$(apt list --upgradable 2>/dev/null | tail -n +2 | wc -l)
+      if [ "$n" -gt 0 ]; then
+        echo "$n packages outdated"
+      fi
+    command_full: "apt list --upgradable"
+
+  scrub:
+    command: |
+      last=$(zpool status storage 2>/dev/null | grep -oP 'on \K.*$' | head -1)
+      if [ -n "$last" ]; then
+        days=$(( ( $(date +%s) - $(date -d "$last" +%s) ) / 86400 ))
+        if [ "$days" -gt 30 ]; then
+          echo "storage scrub last ran ${days}d ago"
+        fi
+      fi
+    command_full: "zpool status -v"
+    cache: 6h
