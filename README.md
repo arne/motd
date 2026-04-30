@@ -38,22 +38,27 @@ Like `fastfetch`, but it tells you that **your VPN is down**, **your scrub is ov
 ```bash
 curl -L https://github.com/arne/motd/releases/latest/download/motd_Linux_x86_64.tar.gz | tar xz
 sudo install -m 0755 motd /usr/local/bin/motd
-sudo mkdir -p /etc/xdg/motd
-sudo cp -r examples/marks /etc/xdg/motd/
-sudo cp examples/system-config.yaml /etc/xdg/motd/config.yaml
 ```
 
 ### From source
 
 ```bash
 go install github.com/arne/motd/cmd/motd@latest
-git clone https://github.com/arne/motd
-sudo mkdir -p /etc/xdg/motd
-sudo cp -r motd/examples/marks /etc/xdg/motd/
-sudo cp motd/examples/system-config.yaml /etc/xdg/motd/config.yaml
 ```
 
-Now `motd` works for any user on the box. Each user can override with their own `~/.config/motd/config.yaml`.
+That's enough — with no config file, `motd` ships with a built-in default that picks a random animal and shows the standard system facts. To customize, drop a config in place:
+
+```bash
+# user config (just for you)
+mkdir -p ~/.config/motd
+motd example-config > ~/.config/motd/config.yaml
+
+# or system-wide for every user on the box
+sudo mkdir -p /etc/xdg/motd
+motd example-config | sudo tee /etc/xdg/motd/config.yaml >/dev/null
+git clone https://github.com/arne/motd /tmp/motd-src
+sudo cp -r /tmp/motd-src/examples/marks /etc/xdg/motd/
+```
 
 ### Hook it into your shell
 
@@ -200,6 +205,7 @@ Re-renders whenever the config or any referenced file changes. Edit YAML in one 
 | Drill-down | | | ✓ |
 | Friendly animal | | ✓ | ✓ |
 | Re-renders on config save | | | ✓ |
+| Useful out-of-the-box | ✓ | ✓ | ✓ |
 | Cute, in 50ms | | | ✓ |
 
 ## Configuration file lookup
@@ -210,8 +216,20 @@ In order:
 2. `$MOTD_CONFIG` env var
 3. `~/.config/motd/config.yaml` (if it exists)
 4. `/etc/xdg/motd/config.yaml` (system fallback)
+5. **Built-in default** — used when none of the above resolve. A random animal mark plus host/uptime/load/mem/ip/disk. No config file is created on disk; just run `motd example-config > ~/.config/motd/config.yaml` when you're ready to customize.
+
+If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an error — the built-in default only kicks in when no path was specified.
 
 Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
+
+## `motd example-config`
+
+Prints a sample config to stdout. Pipe it into a file and edit from there:
+
+```bash
+mkdir -p ~/.config/motd
+motd example-config > ~/.config/motd/config.yaml
+```
 
 ## Building from source
 

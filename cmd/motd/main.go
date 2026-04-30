@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arne/motd"
 	"github.com/arne/motd/internal/block"
 	"github.com/arne/motd/internal/builtin"
 	"github.com/arne/motd/internal/cache"
@@ -49,14 +51,20 @@ func main() {
 		return
 	}
 
+	args := flag.Args()
+	if len(args) > 0 && args[0] == "example-config" {
+		fmt.Print(motd.ExampleConfig)
+		return
+	}
+
 	configPath := *configFlag
-	if configPath == "" {
+	explicit := configPath != ""
+	if !explicit {
 		configPath = config.DefaultPath()
 	}
 
-	args := flag.Args()
 	if len(args) > 0 {
-		if err := drillDown(configPath, args[0]); err != nil {
+		if err := drillDown(configPath, explicit, args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -64,21 +72,35 @@ func main() {
 	}
 
 	if *watchFlag {
-		if err := watchMOTD(configPath); err != nil {
+		if err := watchMOTD(configPath, explicit); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		return
 	}
 
-	if err := renderMOTD(configPath, os.Stdout); err != nil {
+	if err := renderMOTD(configPath, explicit, os.Stdout); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
-func renderMOTD(configPath string, out io.Writer) error {
-	cfg, err := config.Load(configPath)
+// loadConfig loads the config at path. When the path is auto-discovered
+// (explicit=false) and the file is missing, it falls back to a built-in
+// default so a fresh install still produces something useful.
+func loadConfig(path string, explicit bool) (*config.Config, error) {
+	cfg, err := config.Load(path)
+	if err == nil {
+		return cfg, nil
+	}
+	if !explicit && errors.Is(err, os.ErrNotExist) {
+		return config.Default(), nil
+	}
+	return nil, err
+}
+
+func renderMOTD(configPath string, explicit bool, out io.Writer) error {
+	cfg, err := loadConfig(configPath, explicit)
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
@@ -101,7 +123,10 @@ func renderMOTD(configPath string, out io.Writer) error {
 	return nil
 }
 
-func watchMOTD(configPath string) error {
+func watchMOTD(configPath string, explicit bool) error {
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("no config to watch at %s — create one with: motd example-config > %s", configPath, configPath)
+	}
 	dirs := []string{filepath.Dir(configPath)}
 	if cfg, err := config.Load(configPath); err == nil && cfg.Mark != nil && cfg.Mark.File != "" {
 		if d := filepath.Dir(cfg.Mark.File); d != dirs[0] {
@@ -111,7 +136,7 @@ func watchMOTD(configPath string) error {
 	loop := &watch.Loop{
 		WatchDirs: dirs,
 		Render: func(out io.Writer) error {
-			return renderMOTD(configPath, out)
+			return renderMOTD(configPath, explicit, out)
 		},
 	}
 	return loop.Run(context.Background())
@@ -139,8 +164,8 @@ func runAllModules(ctx context.Context, mods map[string]module.Module, cfg *conf
 	return results
 }
 
-func drillDown(configPath, name string) error {
-	cfg, err := config.Load(configPath)
+func drillDown(configPath string, explicit bool, name string) error {
+	cfg, err := loadConfig(configPath, explicit)
 	if err != nil {
 		return err
 	}
