@@ -222,6 +222,22 @@ If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an e
 
 Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
 
+## `motd update`
+
+Replaces the running binary with the latest release from GitHub. Verifies the SHA256 against the release's `checksums.txt` before swapping the file in place.
+
+```bash
+motd update           # download and install if newer
+motd update --check   # report current vs. latest, install nothing
+motd update --force   # reinstall even when already on the latest
+```
+
+If the binary lives somewhere only root can write (e.g. `/usr/local/bin`), re-run with `sudo`. For Go-installed builds (`go install`), `~/go/bin` is user-writable so no sudo needed.
+
+## `motd version`
+
+Prints the version, commit, and build date. Equivalent to `motd --version`.
+
 ## `motd refresh`
 
 Wipes the per-module cache. Run it after an action that invalidates a cached module — most commonly `apt upgrade`, where the `updates` count would otherwise stay stale until its TTL expires.
