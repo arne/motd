@@ -2,7 +2,7 @@
 #
 # `mark` — the friendly animal on the left. Pick any file from the marks dir,
 # or remove the line entirely to drop the mark.
-mark: { file: marks/animals/octopus.ansi }
+mark: { file: marks/animals/panda.ansi }
 
 layout:
   vstack:

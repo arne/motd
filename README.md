@@ -20,7 +20,7 @@ Like `fastfetch`, but it tells you that **your VPN is down**, **your scrub is ov
  ⚠ 12 packages outdated → motd updates
 ```
 
-(That's an elephant. There are 36 other animals to choose from.)
+(That's an elephant. There are 11 other animals to choose from.)
 
 ## What it does
 
@@ -78,7 +78,7 @@ echo "motd" >> ~/.zshrc
 Single YAML file. Two halves: **layout** (a recursive tree of stacks) and **modules** (named things that produce text).
 
 ```yaml
-mark: { file: marks/animals/octopus.ansi }
+mark: { file: marks/animals/panda.ansi }
 
 layout:
   vstack:
@@ -158,15 +158,14 @@ uptime_kuma:
 
 ## Marks
 
-37 cute animals live in `examples/marks/animals/`. Pick one per host to differentiate where you logged in:
+12 cute animals live in `examples/marks/animals/`. Pick one per host to differentiate where you logged in:
 
 ```
-bat   bear   bee   butterfly   cat   cow   crab   dog
-dolphin   dragon   duck   elephant   fox   frog   giraffe
-hamster   hedgehog   koala   lion   llama   monkey   mouse
-octopus   otter   owl   panda   penguin   pig   rabbit
-raccoon   shark   sloth   tiger   turtle   unicorn   whale   wolf
+bear   cat   dog   dragon   fox   lion
+monkey   mouse   panda   penguin   piggy   unicorn
 ```
+
+If your config points at an animal that isn't shipped (e.g. one we trimmed from the set), motd substitutes a random one rather than erroring.
 
 Want one we don't ship? Find its emoji codepoint at [openmoji.org](https://openmoji.org/) and run:
 
@@ -222,7 +221,7 @@ In order:
 
 If `--config` or `$MOTD_CONFIG` points at a file that doesn't exist, that's an error — the built-in default only kicks in when no path was specified.
 
-Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/elephant.ansi` works whether you're using the system or user config.
+Mark file paths in config are resolved relative to the config file's directory, so `marks/animals/panda.ansi` works whether you're using the system or user config.
 
 ## `motd update`
 

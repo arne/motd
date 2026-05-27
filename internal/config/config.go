@@ -112,7 +112,13 @@ func (c *Config) BuildModules() (map[string]module.Module, error) {
 		spec := module.Spec{Name: "mark"}
 		switch {
 		case c.Mark.File != "":
-			spec.File = c.Mark.File
+			if _, err := os.Stat(c.Mark.File); err == nil {
+				spec.File = c.Mark.File
+			} else if mark, ok := randomAnimalMark(); ok {
+				spec.Text = mark
+			} else {
+				spec.File = c.Mark.File
+			}
 		case c.Mark.Text != "":
 			spec.Text = c.Mark.Text
 		}
