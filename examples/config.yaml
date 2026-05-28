@@ -1,8 +1,10 @@
 # Sample motd config. Copy to ~/.config/motd/config.yaml and edit.
 #
-# `mark` — the friendly animal on the left. Pick any file from the marks dir,
-# or remove the line entirely to drop the mark.
-mark: { file: marks/animals/panda.ansi }
+# `mark` — the friendly animal on the left. Pick a shipped animal by name
+# (bear, cat, dog, dragon, fox, lion, monkey, mouse, panda, penguin, piggy,
+# unicorn), point `file` at your own .ansi, or remove the line to drop the
+# mark. Unknown names fall back to a random shipped animal.
+mark: { animal: panda }
 
 layout:
   vstack:

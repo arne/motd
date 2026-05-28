@@ -36,3 +36,28 @@ func TestRandomAnimalMark(t *testing.T) {
 		t.Fatal("randomAnimalMark() returned blank text")
 	}
 }
+
+func TestLoadAnimalMark(t *testing.T) {
+	mark, ok := loadAnimalMark("mouse")
+	if !ok {
+		t.Fatal(`loadAnimalMark("mouse") failed — embedded mouse should be present`)
+	}
+	if strings.TrimSpace(mark) == "" {
+		t.Fatal(`loadAnimalMark("mouse") returned blank text`)
+	}
+	for i, line := range strings.Split(mark, "\n") {
+		if !strings.HasPrefix(line, " ") {
+			t.Errorf(`loadAnimalMark("mouse") line %d missing leading-space padding: %q`, i, line)
+		}
+	}
+
+	if _, ok := loadAnimalMark("chicken"); ok {
+		t.Error(`loadAnimalMark("chicken") returned true — expected miss for unshipped name`)
+	}
+	if _, ok := loadAnimalMark("../config"); ok {
+		t.Error(`loadAnimalMark("../config") returned true — path traversal should be rejected`)
+	}
+	if _, ok := loadAnimalMark(""); ok {
+		t.Error(`loadAnimalMark("") returned true — empty name should be rejected`)
+	}
+}

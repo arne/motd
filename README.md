@@ -78,7 +78,7 @@ echo "motd" >> ~/.zshrc
 Single YAML file. Two halves: **layout** (a recursive tree of stacks) and **modules** (named things that produce text).
 
 ```yaml
-mark: { file: marks/animals/panda.ansi }
+mark: { animal: panda }
 
 layout:
   vstack:
@@ -158,14 +158,20 @@ uptime_kuma:
 
 ## Marks
 
-12 cute animals live in `examples/marks/animals/`. Pick one per host to differentiate where you logged in:
+12 cute animals ship embedded in the binary. Pick one per host to differentiate where you logged in:
 
 ```
 bear   cat   dog   dragon   fox   lion
 monkey   mouse   panda   penguin   piggy   unicorn
 ```
 
-If your config points at an animal that isn't shipped (e.g. one we trimmed from the set), motd substitutes a random one rather than erroring.
+Reference by name — no marks directory needed:
+
+```yaml
+mark: { animal: mouse }
+```
+
+If you'd rather use your own file, `mark: { file: path/to/foo.ansi }` still works. Either way, if the name (or file) doesn't resolve, motd substitutes a random shipped animal rather than erroring.
 
 Want one we don't ship? Find its emoji codepoint at [openmoji.org](https://openmoji.org/) and run:
 

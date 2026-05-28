@@ -22,8 +22,9 @@ type Config struct {
 }
 
 type MarkSpec struct {
-	File string `yaml:"file,omitempty"`
-	Text string `yaml:"text,omitempty"`
+	Animal string `yaml:"animal,omitempty"`
+	File   string `yaml:"file,omitempty"`
+	Text   string `yaml:"text,omitempty"`
 }
 
 type ModuleSpec struct {
@@ -111,6 +112,12 @@ func (c *Config) BuildModules() (map[string]module.Module, error) {
 	if c.Mark != nil {
 		spec := module.Spec{Name: "mark"}
 		switch {
+		case c.Mark.Animal != "":
+			if mark, ok := loadAnimalMark(c.Mark.Animal); ok {
+				spec.Text = mark
+			} else if mark, ok := randomAnimalMark(); ok {
+				spec.Text = mark
+			}
 		case c.Mark.File != "":
 			if _, err := os.Stat(c.Mark.File); err == nil {
 				spec.File = c.Mark.File

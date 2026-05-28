@@ -48,6 +48,26 @@ func Default() *Config {
 	return cfg
 }
 
+// loadAnimalMark returns the embedded mark for the given bare animal name
+// (e.g. "mouse"). Returns false if the name is invalid or not shipped, so
+// callers can fall back to a random one. The art is left-padded by one
+// column so it never butts against the screen edge.
+func loadAnimalMark(name string) (string, bool) {
+	if name == "" || strings.ContainsAny(name, "/\\.") {
+		return "", false
+	}
+	data, err := motd.Marks.ReadFile("examples/marks/animals/" + name + ".ansi")
+	if err != nil {
+		return "", false
+	}
+	art := strings.TrimRight(string(data), "\n")
+	lines := strings.Split(art, "\n")
+	for i, line := range lines {
+		lines[i] = " " + line
+	}
+	return strings.Join(lines, "\n"), true
+}
+
 func randomAnimalMark() (string, bool) {
 	entries, err := fs.ReadDir(motd.Marks, "examples/marks/animals")
 	if err != nil {
@@ -56,16 +76,11 @@ func randomAnimalMark() (string, bool) {
 	names := make([]string, 0, len(entries))
 	for _, e := range entries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ".ansi") {
-			names = append(names, e.Name())
+			names = append(names, strings.TrimSuffix(e.Name(), ".ansi"))
 		}
 	}
 	if len(names) == 0 {
 		return "", false
 	}
-	pick := names[rand.IntN(len(names))]
-	data, err := motd.Marks.ReadFile("examples/marks/animals/" + pick)
-	if err != nil {
-		return "", false
-	}
-	return strings.TrimRight(string(data), "\n"), true
+	return loadAnimalMark(names[rand.IntN(len(names))])
 }
